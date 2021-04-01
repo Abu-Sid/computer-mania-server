@@ -4,7 +4,7 @@ const app = express()
 const port = process.env.PORT || 5000
 const cors= require('cors')
 const MongoClient = require('mongodb').MongoClient;
-const ObjectID = require('mongodb').ObjectID;
+const ObjectId = require('mongodb').ObjectID;
 require('dotenv').config()
 console.log(process.env.DB_USER);
 app.use(cors())
@@ -21,7 +21,8 @@ client.connect(err => {
   console.log('error',err);
   const productCollection = client.db('laptopStore').collection("products");
   const orderCollection = client.db('laptopStore').collection("orders");
-  app.get('/events',(req, res)=>{
+  //get all product and show in home page
+  app.get('/products',(req, res)=>{
     productCollection.find({})
     .toArray()
     .then(items=>{
@@ -30,7 +31,8 @@ client.connect(err => {
     })
     .catch(err => console.error(`Failed to find documents: ${err}`))
   })
-  app.post('/addEvent',(req, res)=>{
+  //Add new product from Admin page
+  app.post('/addProduct',(req, res)=>{
     const newEvent=req.body;
     console.log('adding event:',newEvent);
     productCollection.insertOne(newEvent)
@@ -39,6 +41,7 @@ client.connect(err => {
       res.send(result.insertedCount > 0)
     })
   })
+  //Add Order when checkout
   app.post('/addOrder',(req, res)=>{
     const order=req.body;
     console.log('adding order:',order);
@@ -48,26 +51,32 @@ client.connect(err => {
       res.send(result.insertedCount > 0)
     })
   })
+  //Get order details using email query
   app.get('/order',(req, res)=>{
-   orderCollection.find({})
-    .toArray()
-    .then(doc=>{
-      res.send(doc)
-      console.log(doc);
-    })
-    .catch(err => console.error(`Failed to find documents: ${err}`))
+    const queryEmail=req.query.email;
+    if(queryEmail){
+      orderCollection.find({email:queryEmail})
+      .toArray((err,documents)=>{
+      res.status(200).send(documents)
+      })
+  }
+  else{
+    res.status(401).send('un-authorize access')
+  }
   })
-  app.delete('delete/:id',(req, res)=>{
-    const id=ObjectID(req.params.id)
+  //delete product
+  app.delete('/delete/:id',(req, res)=>{
+    const id=ObjectId(req.params.id)
     console.log('delete',id);
     productCollection.findOneAndDelete({_id:id})
-    .then(documents=>res.send(!!documents.value))
+    .then(documents=>{
+      res.send(!!documents.value)
+    console.log("delete",documents)})
   })
   console.log('connected');
   // perform actions on the collection object
   
 });
-
 
 app.listen(port)
 

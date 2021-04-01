@@ -37,7 +37,6 @@ client.connect(err => {
     console.log('adding event:',newEvent);
     productCollection.insertOne(newEvent)
     .then(result=>{
-      console.log('result',result.insertedCount);
       res.send(result.insertedCount > 0)
     })
   })
@@ -70,7 +69,7 @@ client.connect(err => {
     console.log('delete',id);
     productCollection.findOneAndDelete({_id:id})
     .then(documents=>{
-      res.send(!!documents.value)
+    res.send(!!documents.value)
     console.log("delete",documents)})
   })
   console.log('connected');
